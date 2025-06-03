@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int          @id @default(autoincrement())
+  name           String
+  username       String       @unique
+  password       String
+  role           Role         @default(OPERATOR)
+  programStudiId  Int?         // Tambahkan relasi ke ProgramStudi, opsional untuk ADMINISTRATOR
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  programStudi   ProgramStudi? @relation(fields: [programStudiId], references: [id])
+  documents      Document[]
+  comments       Comment[]
+  activityLogs   ActivityLog[]
+}
+
+enum Role {
+  ADMINISTRATOR
+  OPERATOR
+  VALIDATOR
+}
+
+model ProgramStudi {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]   // Relasi ke User (operator/operator)
+  chapters    Chapter[]
+}
+
+model Chapter {
+  id              Int            @id @default(autoincrement())
+  title           String
+  description     String?
+  programStudiId  Int
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  programStudi ProgramStudi @relation(fields: [programStudiId], references: [id])
+  subChapters  SubChapter[]
+  documents    Document[]
+}
+
+model SubChapter {
+  id         Int         @id @default(autoincrement())
+  chapterId  Int
+  title      String
+  description String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  chapter        Chapter       @relation(fields: [chapterId], references: [id])
+  subSubChapters SubSubChapter[]
+}
+
+model SubSubChapter {
+  id           Int         @id @default(autoincrement())
+  subChapterId Int
+  title        String
+  description  String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  subChapter SubChapter @relation(fields: [subChapterId], references: [id])
+}
+
+model Document {
+  id            Int            @id @default(autoincrement())
+  chapterId     Int
+  title         String
+  description   String?
+  filePath      String
+  uploadedById  Int
+  status        DocumentStatus @default(DRAFT)
+  validated     Boolean        @default(false)
+  deletedAt     DateTime?      @map("deleted_at")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  chapter    Chapter @relation(fields: [chapterId], references: [id])
+  uploadedBy User    @relation(fields: [uploadedById], references: [id])
+  comments   Comment[]
+  sharedLinks SharedLink[]
+}
+
+enum DocumentStatus {
+  DRAFT
+  SUBMITTED
+  REVISED
+  APPROVED
+}
+
+model Comment {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  documentId Int
+  content    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id])
+  document Document @relation(fields: [documentId], references: [id])
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  message   String
+  status    LogStatus
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+enum LogStatus {
+  INFO
+  WARNING
+  ERROR
+}
+
+model SharedLink {
+  id         Int      @id @default(autoincrement())
+  documentId Int
+  token      String   @unique
+  expiresAt  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  document Document @relation(fields: [documentId], references: [id])
+}
