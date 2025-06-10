@@ -3,38 +3,48 @@ const router = express.Router();
 const documentController = require('../controllers/documentController');
 const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddleware');
 
-// ADMINISTRATOR & OPERATOR: CRUD dokumen
+// Upload dokumen + multer middleware
 router.post(
-    '/', 
-    authenticateToken, 
-    authorizeRoles('ADMINISTRATOR', 'OPERATOR'), 
-    documentController.createDocument
-);
-router.get(
-    '/', 
-    authenticateToken, 
-    authorizeRoles('ADMINISTRATOR', 'OPERATOR', 'VALIDATOR'), 
-    documentController.getDocuments
-);
-router.put(
-    '/:id', 
-    authenticateToken, 
-    authorizeRoles('ADMINISTRATOR', 'OPERATOR'), 
-    documentController.updateDocument
-);
-router.delete(
-    '/:id', 
-    authenticateToken, 
-    authorizeRoles('ADMINISTRATOR', 'OPERATOR'), 
-    documentController.deleteDocument
+  '/', 
+  authenticateToken, 
+  authorizeRoles('ADMINISTRATOR', 'OPERATOR'), 
+  documentController.upload.single('file'), 
+  documentController.createDocument
 );
 
-// VALIDATOR: Validasi dokumen
+// Get dokumen berdasarkan subchapter
+router.get(
+  '/subchapter/:id', 
+  authenticateToken, 
+  authorizeRoles('ADMINISTRATOR', 'OPERATOR', 'VALIDATOR'), 
+  documentController.getDocumentsBySubChapter
+);
+
+// Validasi status dokumen (PATCH)
 router.patch(
-    '/:id/validate', 
-    authenticateToken, 
-    authorizeRoles('VALIDATOR'), 
-    documentController.validateDocument
+  '/:id/status', 
+  authenticateToken, 
+  authorizeRoles('VALIDATOR'), 
+  documentController.validateDocument // <== ini diganti dari updateDocumentStatus ke validateDocument
+);
+
+// Preview dokumen
+router.get('/:id', authenticateToken, documentController.getDocumentById);
+
+// Edit metadata dokumen
+router.put(
+  '/:id', 
+  authenticateToken, 
+  authorizeRoles('ADMINISTRATOR', 'OPERATOR'), 
+  documentController.updateDocument
+);
+
+// Hapus dokumen
+router.delete(
+  '/:id', 
+  authenticateToken, 
+  authorizeRoles('ADMINISTRATOR', 'OPERATOR'), 
+  documentController.deleteDocument
 );
 
 module.exports = router;
