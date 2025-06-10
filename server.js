@@ -15,6 +15,7 @@ const userRoutes = require("./src/routes/users");
 const documentRoutes = require("./src/routes/documents");
 const chapterRoutes = require("./src/routes/chapters");
 const subChapterRoutes = require("./src/routes/subChapter");
+const commentRoutes = require("./src/routes/comment");
 
 // routes dengan prefix API masing-masing
 app.use("/api/auth", authRoutes);
@@ -22,6 +23,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/chapters", chapterRoutes);
 app.use("/api/subchapters", subChapterRoutes);
+app.use("/api/comments", commentRoutes);
 
 // Route default
 app.get("/", (req, res) => {
