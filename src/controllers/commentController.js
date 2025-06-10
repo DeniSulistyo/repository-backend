@@ -3,6 +3,8 @@ const prisma = require("../db/prisma");
 const createComment = async (req, res) => {
   const { content, documentId } = req.body;
   const userId = req.user.id;
+  console.log("User info:", req.user);
+
   if (!content || !documentId) {
     return res
       .status(400)
@@ -28,7 +30,19 @@ const createComment = async (req, res) => {
         userId,
       },
     });
-    res.json({ message: "Comment created successfully.", data: comment });
+
+    const log = await prisma.activityLog.create({
+      data: {
+        userId: userId,
+        message: `Validator ${req.user.username} commented on document ID ${documentId}`,
+        status: "INFO",
+      },
+    });
+    res.status(201).json({
+      message: "Comment created successfully.",
+      data: comment,
+      log: log,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error creating comment." });
   }
