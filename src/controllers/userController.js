@@ -18,7 +18,13 @@ exports.createUser = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const users = await prisma.user.findMany();
+    const users = await prisma.user.findMany({
+      include: {
+        programStudi: {
+          select: { id: true, name: true }
+        }
+      },
+    });
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: 'Error mengambil data user.' });
