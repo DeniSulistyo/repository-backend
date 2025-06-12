@@ -5,7 +5,16 @@ require("dotenv").config(); // Load environment variables dari .env
 
 const app = express();
 
-app.use(cors());
+// app.use(cors());
+const corsOptions = {
+  origin: ["http://localhost:5173", "https://eviden-frontend.vercel.app"],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+// cors for deployment 
+
 app.use(express.json());
 app.use(morgan("dev"));
 
