@@ -4,17 +4,26 @@ const bcrypt = require('bcryptjs');
 exports.createUser = async (req, res) => {
   try {
     const { name, username, password, role, programStudiId } = req.body;
-    // validasi input, hash password, simpan user baru ke DB
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password || 'default123', 10);
+
     const user = await prisma.user.create({
-      data: { name, username, password: hashedPassword, role, programStudiId: programStudiId || null }
+      data: {
+        name,
+        username,
+        password: hashedPassword,
+        role,
+        programStudiId: programStudiId || null
+      }
     });
+
     const { password: _, ...userWithoutPassword } = user;
     res.status(201).json(userWithoutPassword);
   } catch (error) {
+    console.error("❌ Error saat membuat user:", error); // Tambahkan baris ini
     res.status(500).json({ message: 'Error membuat user.' });
   }
 };
+
 
 exports.getUsers = async (req, res) => {
   try {
