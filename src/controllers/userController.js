@@ -1,10 +1,10 @@
-const prisma = require('../db/prisma');
-const bcrypt = require('bcryptjs');
+const prisma = require("../db/prisma");
+const bcrypt = require("bcryptjs");
 
 exports.createUser = async (req, res) => {
   try {
     const { name, username, password, role, programStudiId } = req.body;
-    const hashedPassword = await bcrypt.hash(password || 'default123', 10);
+    const hashedPassword = await bcrypt.hash(password || "default123", 10);
 
     const user = await prisma.user.create({
       data: {
@@ -12,31 +12,30 @@ exports.createUser = async (req, res) => {
         username,
         password: hashedPassword,
         role,
-        programStudiId: programStudiId || null
-      }
+        programStudiId: programStudiId || null,
+      },
     });
 
     const { password: _, ...userWithoutPassword } = user;
     res.status(201).json(userWithoutPassword);
   } catch (error) {
     console.error("❌ Error saat membuat user:", error); // Tambahkan baris ini
-    res.status(500).json({ message: 'Error membuat user.' });
+    res.status(500).json({ message: "Error membuat user." });
   }
 };
-
 
 exports.getUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       include: {
         programStudi: {
-          select: { id: true, name: true }
-        }
+          select: { id: true, name: true },
+        },
       },
     });
     res.json(users);
   } catch (error) {
-    res.status(500).json({ message: 'Error mengambil data user.' });
+    res.status(500).json({ message: "Error mengambil data user." });
   }
 };
 
@@ -58,7 +57,7 @@ exports.updateUser = async (req, res) => {
     const { password: _, ...userWithoutPassword } = updatedUser;
     res.json(userWithoutPassword);
   } catch (error) {
-    res.status(500).json({ message: 'Error memperbarui user.' });
+    res.status(500).json({ message: "Error memperbarui user." });
   }
 };
 
@@ -66,8 +65,22 @@ exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.user.delete({ where: { id: Number(id) } });
-    res.json({ message: 'User berhasil dihapus.' });
+    res.json({ message: "User berhasil dihapus." });
   } catch (error) {
-    res.status(500).json({ message: 'Error menghapus user.' });
+    res.status(500).json({ message: "Error menghapus user." });
+  }
+};
+
+exports.getAllProgramStudi = async (req, res) => {
+  try {
+    const programStudi = await prisma.programStudi.findMany();
+    res
+      .status(200)
+      .json({
+        message: "Data program studi berhasil diambil.",
+        data: programStudi,
+      });
+  } catch (error) {
+    res.status(500).json({ message: "Error mengambil data program studi." });
   }
 };
