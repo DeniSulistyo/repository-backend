@@ -5,7 +5,10 @@ const JWT_SECRET = process.env.JWT_SECRET || "secretkey";
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
-  const user = await prisma.user.findUnique({ where: { username } });
+  const user = await prisma.user.findUnique({
+    where: { username },
+    include: { programStudi: true },
+  });
   if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
   const isMatch = await bcrypt.compare(password, user.password);
@@ -25,5 +28,6 @@ exports.login = async (req, res) => {
       username: user.username,
       role: user.role,
     },
+    programStudi: user.programStudi,
   });
 };
