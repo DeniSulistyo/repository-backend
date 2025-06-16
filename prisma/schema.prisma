@@ -48,9 +48,10 @@ model Chapter {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  programStudi ProgramStudi @relation(fields: [programStudiId], references: [id])
-  subChapters  SubChapter[]
-  documents    Document[]
+  programStudi   ProgramStudi    @relation(fields: [programStudiId], references: [id])
+  subChapters    SubChapter[]
+  subSubChapters SubSubChapter[]
+  documents      Document[]
 }
 
 model SubChapter {
@@ -75,6 +76,8 @@ model SubSubChapter {
 
   subChapter SubChapter @relation(fields: [subChapterId], references: [id])
   Document   Document[]
+  Chapter    Chapter?   @relation(fields: [chapterId], references: [id])
+  chapterId  Int?
 }
 
 model Document {

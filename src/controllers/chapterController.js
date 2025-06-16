@@ -22,7 +22,11 @@ exports.getChaptersByProgramStudi = async (req, res) => {
     const chapters = await prisma.chapter.findMany({
       where: whereClause,
       include: {
-        subChapters: true,
+        subChapters: {
+          include: {
+            subSubChapters: true,
+          },
+        },
       },
     });
     res.json({ message: "Berhasil mengambil data bab", data: chapters });
