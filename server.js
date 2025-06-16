@@ -5,16 +5,7 @@ require("dotenv").config(); // Load environment variables dari .env
 
 const app = express();
 
-// app.use(cors());
-const corsOptions = {
-  origin: ["http://localhost:5173", "https://eviden-frontend.vercel.app"],
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-
-// cors for deployment 
-
+app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
@@ -25,6 +16,7 @@ const documentRoutes = require("./src/routes/documents");
 const chapterRoutes = require("./src/routes/chapters");
 const subChapterRoutes = require("./src/routes/subChapter");
 const commentRoutes = require("./src/routes/comment");
+const subSubChapterRoutes = require("./src/routes/subSubChapter");
 
 // routes dengan prefix API masing-masing
 app.use("/api/auth", authRoutes);
@@ -33,6 +25,7 @@ app.use("/api/documents", documentRoutes);
 app.use("/api/chapters", chapterRoutes);
 app.use("/api/subchapters", subChapterRoutes);
 app.use("/api/comments", commentRoutes);
+app.use("/api/subsubchapters", subSubChapterRoutes);
 
 // Route default
 app.get("/", (req, res) => {
