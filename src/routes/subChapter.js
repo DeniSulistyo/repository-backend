@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const prisma = require("../db/prisma");  // <== import prisma
+const prisma = require("../db/prisma"); // <== import prisma
 const {
   authenticateToken,
   authorizeRoles,
@@ -25,7 +25,9 @@ router.get(
       const subChapters = await prisma.subChapter.findMany();
       res.status(200).json({ message: "Semua subbab", data: subChapters });
     } catch (error) {
-      res.status(500).json({ message: "Gagal mengambil data subbab", error: error.message });
+      res
+        .status(500)
+        .json({ message: "Gagal mengambil data subbab", error: error.message });
     }
   }
 );
@@ -50,7 +52,7 @@ router.put(
 router.delete(
   "/:id",
   authenticateToken,
-  authorizeRoles("ADMINISTRATOR"),
+  authorizeRoles("ADMINISTRATOR", "OPERATOR"),
   subChapterController.deleteSubChapter
 );
 
