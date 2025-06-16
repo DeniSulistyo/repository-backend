@@ -38,7 +38,7 @@ router.put(
 router.delete(
   "/:id",
   authenticateToken,
-  authorizeRoles("ADMINISTRATOR"),
+  authorizeRoles("ADMINISTRATOR", "OPERATOR"),
   chapterController.deleteChapter
 );
 
