@@ -3,9 +3,7 @@ const prisma = require("../db/prisma");
 // ✅ Get semua chapter (urut berdasarkan `order`)
 exports.getChapters = async (req, res) => {
   try {
-    const chapters = await prisma.chapter.findMany({
-      orderBy: { order: "asc" },
-    });
+    const chapters = await prisma.chapter.findMany();
     res.json({ message: "Berhasil mengambil data bab", data: chapters });
   } catch (error) {
     res.status(500).json({
@@ -39,7 +37,7 @@ exports.getSubChaptersByChapter = async (req, res) => {
   try {
     const subChapters = await prisma.subChapter.findMany({
       where: { chapterId },
-      orderBy: { order: "asc" },
+      orderBy: { id: "asc" },
     });
     res.json({ message: "Berhasil mengambil data subbab", data: subChapters });
   } catch (error) {
@@ -59,7 +57,6 @@ exports.createChapter = async (req, res) => {
         title,
         description,
         programStudiId,
-        order,
       },
     });
     res.status(201).json({ message: "Bab berhasil dibuat", data: chapter });
@@ -74,7 +71,7 @@ exports.createChapter = async (req, res) => {
 // ✅ Update chapter
 exports.updateChapter = async (req, res) => {
   const { id } = req.params;
-  const { title, description, order } = req.body;
+  const { title, description } = req.body;
 
   try {
     const existingChapter = await prisma.chapter.findUnique({
@@ -90,7 +87,6 @@ exports.updateChapter = async (req, res) => {
       data: {
         title,
         description,
-        order,
       },
     });
 

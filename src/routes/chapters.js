@@ -5,6 +5,7 @@ const {
   authenticateToken,
   authorizeRoles,
 } = require("../middlewares/authMiddleware");
+const subChapterController = require("../controllers/subChapterController");
 
 // ✅ Get semua chapter
 // router.get("/", authenticateToken, chapterController.getChapters);
@@ -40,6 +41,14 @@ router.delete(
   authenticateToken,
   authorizeRoles("ADMINISTRATOR", "OPERATOR"),
   chapterController.deleteChapter
+);
+
+
+// 
+router.get(
+  "/:id/subchapters",
+  authenticateToken,
+  subChapterController.getSubChaptersByChapter
 );
 
 module.exports = router;

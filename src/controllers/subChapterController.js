@@ -11,9 +11,13 @@ const createSubChapter = async (req, res) => {
         description,
       },
     });
-    res.status(201).json({ message: "Subbab berhasil dibuat", data: subChapter });
+    res
+      .status(201)
+      .json({ message: "Subbab berhasil dibuat", data: subChapter });
   } catch (error) {
-    res.status(500).json({ message: "Gagal membuat subbab", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal membuat subbab", error: error.message });
   }
 };
 
@@ -27,11 +31,16 @@ const getSubChaptersByChapter = async (req, res) => {
   try {
     const subChapters = await prisma.subChapter.findMany({
       where: { chapterId },
+ 
     });
 
-    res.status(200).json({ message: "Data subbab ditemukan", data: subChapters });
+    res
+      .status(200)
+      .json({ message: "Data subbab ditemukan", data: subChapters });
   } catch (error) {
-    res.status(500).json({ message: "Gagal mengambil data subbab", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal mengambil data subbab", error: error.message });
   }
 };
 
@@ -50,9 +59,13 @@ const updateSubChapter = async (req, res) => {
       data: { title, description },
     });
 
-    res.status(200).json({ message: "Subbab berhasil diperbarui", data: updated });
+    res
+      .status(200)
+      .json({ message: "Subbab berhasil diperbarui", data: updated });
   } catch (error) {
-    res.status(500).json({ message: "Gagal memperbarui subbab", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal memperbarui subbab", error: error.message });
   }
 };
 
@@ -68,7 +81,9 @@ const deleteSubChapter = async (req, res) => {
     await prisma.subChapter.delete({ where: { id } });
     res.status(200).json({ message: "Subbab berhasil dihapus" });
   } catch (error) {
-    res.status(500).json({ message: "Gagal menghapus subbab", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal menghapus subbab", error: error.message });
   }
 };
 
