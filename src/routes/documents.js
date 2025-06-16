@@ -3,47 +3,60 @@ const router = express.Router();
 const documentController = require('../controllers/documentController');
 const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddleware');
 
-// Upload dokumen + multer middleware
+// 📌 Upload dokumen (khusus ADMINISTRATOR dan OPERATOR)
 router.post(
-  '/', 
-  authenticateToken, 
-  authorizeRoles('ADMINISTRATOR', 'OPERATOR'), 
-  documentController.upload.single('file'), 
+  '/',
+  authenticateToken,
+  authorizeRoles('ADMINISTRATOR', 'OPERATOR'),
+  documentController.upload.single('file'),
   documentController.createDocument
 );
 
-// Get dokumen berdasarkan subchapter
+// 📌 Ambil semua dokumen (jika diperlukan route umum)
 router.get(
-  '/subchapter/:id', 
-  authenticateToken, 
-  authorizeRoles('ADMINISTRATOR', 'OPERATOR', 'VALIDATOR'), 
+  '/',
+  authenticateToken,
+  authorizeRoles('ADMINISTRATOR', 'OPERATOR', 'VALIDATOR'),
+  documentController.getDocuments
+);
+
+// 📌 Ambil dokumen berdasarkan SubChapter
+router.get(
+  '/subchapter/:id',
+  authenticateToken,
+  authorizeRoles('ADMINISTRATOR', 'OPERATOR', 'VALIDATOR'),
   documentController.getDocumentsBySubChapter
 );
 
-// Validasi status dokumen (PATCH)
+// 📌 Validasi dokumen (khusus VALIDATOR)
 router.patch(
-  '/:id/status', 
-  authenticateToken, 
-  authorizeRoles('VALIDATOR'), 
-  documentController.validateDocument // <== ini diganti dari updateDocumentStatus ke validateDocument
+  '/:id/status',
+  authenticateToken,
+  authorizeRoles('VALIDATOR'),
+  documentController.validateDocument
 );
 
-// Preview dokumen
-router.get('/:id', authenticateToken, documentController.getDocumentById);
+// 📌 Detail dokumen (preview)
+router.get(
+  '/:id',
+  authenticateToken,
+  authorizeRoles('ADMINISTRATOR', 'OPERATOR', 'VALIDATOR'),
+  documentController.getDocumentById
+);
 
-// Edit metadata dokumen
+// 📌 Edit metadata dokumen (ADMINISTRATOR dan OPERATOR)
 router.put(
-  '/:id', 
-  authenticateToken, 
-  authorizeRoles('ADMINISTRATOR', 'OPERATOR'), 
+  '/:id',
+  authenticateToken,
+  authorizeRoles('ADMINISTRATOR', 'OPERATOR'),
   documentController.updateDocument
 );
 
-// Hapus dokumen
+// 📌 Hapus dokumen (ADMINISTRATOR dan OPERATOR)
 router.delete(
-  '/:id', 
-  authenticateToken, 
-  authorizeRoles('ADMINISTRATOR', 'OPERATOR'), 
+  '/:id',
+  authenticateToken,
+  authorizeRoles('ADMINISTRATOR', 'OPERATOR'),
   documentController.deleteDocument
 );
 

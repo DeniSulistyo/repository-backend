@@ -35,7 +35,6 @@ exports.createDocument = async (req, res) => {
         subSubChapterId: subSubChapterId ? parseInt(subSubChapterId) : null,
         filePath,
         uploadedById,
-        // status otomatis 'PENDING' dari default
       },
     });
 
@@ -53,8 +52,10 @@ exports.getDocuments = async (req, res) => {
     const documents = await prisma.document.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
-        validator: { select: { id: true, name: true, username: true } },
-        uploader: { select: { id: true, name: true, username: true } },
+        uploadedBy: { select: { id: true, name: true, username: true } },
+        validator: { select: { id: true, name: true, username: true } }, // ✅ yang benar
+        chapter: { select: { id: true, title: true } },
+        SubSubChapter: { select: { id: true, title: true } },
       },
     });
     res.json(documents);
@@ -63,7 +64,7 @@ exports.getDocuments = async (req, res) => {
   }
 };
 
-// GET /subchapters/:id/documents (list dokumen berdasar subchapter)
+// GET /documents/subchapter/:id (list dokumen berdasar subchapter)
 exports.getDocumentsBySubChapter = async (req, res) => {
   const subChapterId = Number(req.params.id);
   try {
@@ -71,8 +72,10 @@ exports.getDocumentsBySubChapter = async (req, res) => {
       where: { subChapterId },
       orderBy: { createdAt: 'desc' },
       include: {
-        validator: { select: { id: true, name: true, username: true } },
-        uploader: { select: { id: true, name: true, username: true } },
+        uploadedBy: { select: { id: true, name: true, username: true } },
+        validator: { select: { id: true, name: true, username: true } }, // ✅
+        chapter: { select: { id: true, title: true } },
+        SubSubChapter: { select: { id: true, title: true } },
       },
     });
     res.json(documents);
@@ -81,11 +84,12 @@ exports.getDocumentsBySubChapter = async (req, res) => {
   }
 };
 
-// PATCH /documents/:id/validate (validasi dokumen)
+// PATCH /documents/:id/status (validasi dokumen)
 exports.validateDocument = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { status } = req.body; // VALID, PENDING, DITOLAK
+    const { status } = req.body;
+
     if (!['VALID', 'PENDING', 'DITOLAK'].includes(status)) {
       return res.status(400).json({ message: 'Status tidak valid' });
     }
@@ -100,7 +104,8 @@ exports.validateDocument = async (req, res) => {
       where: { id },
       data: { status, validatedBy },
     });
-    res.json(updated);
+
+    res.json({ message: 'Status dokumen berhasil divalidasi', document: updated });
   } catch (error) {
     res.status(500).json({ message: 'Gagal update status dokumen', error: error.message });
   }
@@ -110,7 +115,15 @@ exports.validateDocument = async (req, res) => {
 exports.getDocumentById = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const document = await prisma.document.findUnique({ where: { id } });
+    const document = await prisma.document.findUnique({
+      where: { id },
+      include: {
+        uploadedBy: { select: { id: true, name: true, username: true } },
+        validator: { select: { id: true, name: true, username: true } }, // ✅
+        chapter: { select: { id: true, title: true } },
+        SubSubChapter: { select: { id: true, title: true } },
+      },
+    });
     if (!document) return res.status(404).json({ message: 'Dokumen tidak ditemukan' });
     res.json(document);
   } catch (error) {
@@ -122,13 +135,16 @@ exports.getDocumentById = async (req, res) => {
 exports.updateDocument = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { fileName, status } = req.body;
+    const { title, description } = req.body;
 
     const updated = await prisma.document.update({
       where: { id },
-      data: { fileName, status },
+      data: {
+        title,
+        description,
+      },
     });
-    res.json(updated);
+    res.json({ message: 'Dokumen berhasil diperbarui', document: updated });
   } catch (error) {
     res.status(500).json({ message: 'Gagal update dokumen', error: error.message });
   }
