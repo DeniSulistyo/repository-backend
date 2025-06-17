@@ -23,6 +23,7 @@ const chapterRoutes = require("./src/routes/chapters");
 const subChapterRoutes = require("./src/routes/subChapter");
 const commentRoutes = require("./src/routes/comment");
 const subSubChapterRoutes = require("./src/routes/subSubChapter");
+const notificationRoutes = require("./src/routes/notification");
 
 // routes dengan prefix API masing-masing
 app.use("/api/auth", authRoutes);
@@ -32,6 +33,7 @@ app.use("/api/chapters", chapterRoutes);
 app.use("/api/subchapters", subChapterRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/subsubchapters", subSubChapterRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Route default
 app.get("/", (req, res) => {

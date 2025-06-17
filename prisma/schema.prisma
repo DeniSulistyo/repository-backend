@@ -17,11 +17,12 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  programStudi       ProgramStudi? @relation(fields: [programStudiId], references: [id])
-  documents          Document[]    @relation("UploadedDocuments") // ✅ relasi upload
-  validatedDocuments Document[]    @relation("ValidatedDocuments") // ✅ relasi validasi
+  programStudi       ProgramStudi?  @relation(fields: [programStudiId], references: [id])
+  documents          Document[]     @relation("UploadedDocuments") // ✅ relasi upload
+  validatedDocuments Document[]     @relation("ValidatedDocuments") // ✅ relasi validasi
   comments           Comment[]
   activityLogs       ActivityLog[]
+  Notification       Notification[]
 }
 
 enum Role {
@@ -87,6 +88,7 @@ model Document {
   title           String
   description     String?
   filePath        String
+  cloudinaryId    String?
   uploadedById    Int
   validatedBy     Int? // ✅ Tambahan
   status          DocumentStatus @default(PENDING)
@@ -149,4 +151,15 @@ model SharedLink {
   updatedAt  DateTime  @updatedAt
 
   document Document @relation(fields: [documentId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
 }
