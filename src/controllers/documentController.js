@@ -191,7 +191,7 @@ exports.getDocumentById = async (req, res) => {
       where: { id },
       include: {
         uploadedBy: { select: { id: true, name: true, username: true } },
-        validator: { select: { id: true, name: true, username: true } }, // ✅
+        validator: { select: { id: true, name: true, username: true } },
         chapter: { select: { id: true, title: true } },
         SubSubChapter: { select: { id: true, title: true } },
       },
