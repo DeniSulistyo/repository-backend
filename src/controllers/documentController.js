@@ -12,77 +12,48 @@ const storage = new CloudinaryStorage({
     public_id: (req, file) => {
       const originalName = path.parse(file.originalname).name;
       const ext = path.extname(file.originalname);
-      const timestamp = Date.now();
-      return `${originalName}${ext}`; // Beri nama + ekstensi
+      return `${originalName}${ext}`; // Nama + ekstensi
     },
   },
 });
 
-// Setup multer storage
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, './uploads'); // pastikan folder ini ada
-//   },
-//   filename: (req, file, cb) => {
-//     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-//     cb(null, uniqueSuffix + path.extname(file.originalname));
-//   },
-// });
-
 exports.upload = multer({ storage });
 
-// POST /documents (upload dokumen local storage)
-// exports.createDocument = async (req, res) => {
-//   try {
-//     const { chapterId, title, description, subSubChapterId } = req.body;
-
-//     if (!req.file) {
-//       return res.status(400).json({ message: "File harus diupload" });
-//     }
-
-//     const filePath = `/uploads/${req.file.filename}`;
-//     const uploadedById = req.user.id;
-
-//     const document = await prisma.document.create({
-//       data: {
-//         chapterId: parseInt(chapterId),
-//         title,
-//         description,
-//         subSubChapterId: subSubChapterId ? parseInt(subSubChapterId) : null,
-//         filePath,
-//         uploadedById,
-//       },
-//     });
-
-//     res.status(201).json({ message: "Dokumen berhasil diupload", document });
-//   } catch (error) {
-//     console.error(error);
-//     res
-//       .status(500)
-//       .json({ message: "Gagal upload dokumen", error: error.message });
-//   }
-// };
-
-// POST /documents (upload dokumen cloudinary storage)
-// POST /documents (upload dokumen)
+// POST /documents
+// POST /documents
 exports.createDocument = async (req, res) => {
   try {
-    const { chapterId, title, description, subSubChapterId } = req.body;
+    const { chapterId, subChapterId, subSubChapterId, title, description } = req.body;
 
+    // Validasi minimal salah satu ID struktur bab terisi
+    if (!chapterId && !subChapterId && !subSubChapterId) {
+      return res.status(400).json({ message: "Minimal salah satu dari chapterId, subChapterId, atau subSubChapterId harus diisi" });
+    }
+
+    // Validasi urutan struktur jika subChapterId atau subSubChapterId digunakan
+    if (subSubChapterId && !subChapterId) {
+      return res.status(400).json({ message: "subSubChapterId membutuhkan subChapterId" });
+    }
+    if (subChapterId && !chapterId) {
+      return res.status(400).json({ message: "subChapterId membutuhkan chapterId" });
+    }
+
+    // Validasi file upload
     if (!req.file || !req.file.path) {
       return res.status(400).json({ message: "File harus diupload" });
     }
 
-    const fileUrl = req.file.path; // Cloudinary URL
+    const fileUrl = req.file.path;
     const cloudinaryId = req.file.filename;
     const uploadedById = req.user.id;
 
     const document = await prisma.document.create({
       data: {
-        chapterId: parseInt(chapterId),
+        chapterId: chapterId ? parseInt(chapterId) : null,
+        subChapterId: subChapterId ? parseInt(subChapterId) : null,
+        subSubChapterId: subSubChapterId ? parseInt(subSubChapterId) : null,
         title,
         description,
-        subSubChapterId: subSubChapterId ? parseInt(subSubChapterId) : null,
         filePath: fileUrl,
         cloudinaryId,
         uploadedById,
@@ -91,23 +62,23 @@ exports.createDocument = async (req, res) => {
 
     res.status(201).json({ message: "Dokumen berhasil diupload", document });
   } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ message: "Gagal upload dokumen", error: error.message });
+    res.status(500).json({ message: "Gagal upload dokumen", error: error.message });
   }
 };
 
-// GET /documents (list semua dokumen)
+
+// GET /documents
 exports.getDocuments = async (req, res) => {
   try {
     const documents = await prisma.document.findMany({
+      where: { isDeleted: false },
       orderBy: { createdAt: "desc" },
       include: {
         uploadedBy: { select: { id: true, name: true, username: true } },
-        validator: { select: { id: true, name: true, username: true } }, // ✅ yang benar
+        validator: { select: { id: true, name: true, username: true } },
         chapter: { select: { id: true, title: true } },
-        SubSubChapter: { select: { id: true, title: true } },
+        subChapter: { select: { id: true, title: true } },
+        subSubChapter: { select: { id: true, title: true } },
       },
     });
     res.json(documents);
@@ -118,18 +89,21 @@ exports.getDocuments = async (req, res) => {
   }
 };
 
-// GET /documents/subchapter/:id (list dokumen berdasar subchapter)
+// GET /documents/subchapter/:id
 exports.getDocumentsBySubChapter = async (req, res) => {
   const subChapterId = Number(req.params.id);
   try {
     const documents = await prisma.document.findMany({
-      where: { subChapterId },
+      where: {
+        subChapterId,
+        isDeleted: false,
+      },
       orderBy: { createdAt: "desc" },
       include: {
         uploadedBy: { select: { id: true, name: true, username: true } },
-        validator: { select: { id: true, name: true, username: true } }, // ✅
+        validator: { select: { id: true, name: true, username: true } },
         chapter: { select: { id: true, title: true } },
-        SubSubChapter: { select: { id: true, title: true } },
+        subSubChapter: { select: { id: true, title: true } },
       },
     });
     res.json(documents);
@@ -140,7 +114,30 @@ exports.getDocumentsBySubChapter = async (req, res) => {
   }
 };
 
-// PATCH /documents/:id/status (validasi dokumen)
+// GET /documents/:id
+exports.getDocumentById = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const document = await prisma.document.findFirst({
+      where: { id, isDeleted: false },
+      include: {
+        uploadedBy: { select: { id: true, name: true, username: true } },
+        validator: { select: { id: true, name: true, username: true } },
+        chapter: { select: { id: true, title: true } },
+        subSubChapter: { select: { id: true, title: true } },
+      },
+    });
+    if (!document)
+      return res.status(404).json({ message: "Dokumen tidak ditemukan" });
+    res.json(document);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Gagal mengambil dokumen", error: error.message });
+  }
+};
+
+// PATCH /documents/:id/status
 exports.validateDocument = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -154,6 +151,14 @@ exports.validateDocument = async (req, res) => {
       return res
         .status(403)
         .json({ message: "Hanya Validator yang bisa validasi dokumen" });
+    }
+
+    const existingDoc = await prisma.document.findFirst({
+      where: { id, isDeleted: false },
+    });
+
+    if (!existingDoc) {
+      return res.status(404).json({ message: "Dokumen tidak ditemukan" });
     }
 
     const validatedBy = req.user.id;
@@ -183,62 +188,32 @@ exports.validateDocument = async (req, res) => {
   }
 };
 
-// GET /documents/:id (preview dokumen)
-exports.getDocumentById = async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const document = await prisma.document.findUnique({
-      where: { id },
-      include: {
-        uploadedBy: { select: { id: true, name: true, username: true } },
-        validator: { select: { id: true, name: true, username: true } },
-        chapter: { select: { id: true, title: true } },
-        SubSubChapter: { select: { id: true, title: true } },
-      },
-    });
-    if (!document)
-      return res.status(404).json({ message: "Dokumen tidak ditemukan" });
-    res.json(document);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Gagal mengambil dokumen", error: error.message });
-  }
-};
-
-// PUT /documents/:id (edit metadata dokumen)
-
+// PUT /documents/:id
 exports.updateDocument = async (req, res) => {
   try {
     const id = Number(req.params.id);
     const { title, description } = req.body;
 
-    // Ambil dokumen lama
-    const existingDoc = await prisma.document.findUnique({ where: { id } });
+    const existingDoc = await prisma.document.findFirst({
+      where: { id, isDeleted: false },
+    });
+
     if (!existingDoc) {
       return res.status(404).json({ message: "Dokumen tidak ditemukan" });
     }
 
-    let updatedData = {
-      title,
-      description,
-    };
+    let updatedData = { title, description };
 
-    // Kalau user upload file baru
     if (req.file && req.file.path) {
-      // Hapus file lama dari Cloudinary jika ada
       if (existingDoc.cloudinaryId) {
         await cloudinary.uploader.destroy(existingDoc.cloudinaryId, {
-          resource_type: "raw", // karena file bukan image
+          resource_type: "raw",
         });
       }
-
-      // Simpan file baru ke data update
       updatedData.filePath = req.file.path;
       updatedData.cloudinaryId = req.file.filename;
     }
 
-    // Update dokumen
     const updated = await prisma.document.update({
       where: { id },
       data: updatedData,
@@ -249,54 +224,161 @@ exports.updateDocument = async (req, res) => {
       document: updated,
     });
   } catch (error) {
-    console.error(error);
     res
       .status(500)
       .json({ message: "Gagal update dokumen", error: error.message });
   }
 };
 
-// DELETE /documents/:id ( local storage)
-// exports.deleteDocument = async (req, res) => {
-//   try {
-//     const id = Number(req.params.id);
-//     await prisma.document.delete({ where: { id } });
-//     res.json({ message: "Dokumen berhasil dihapus" });
-//   } catch (error) {
-//     res
-//       .status(500)
-//       .json({ message: "Gagal hapus dokumen", error: error.message });
-//   }
-// };
-
-// DELETE /documents/:id (Cloudinary)
-
+// DELETE /documents/:id (soft delete)
 exports.deleteDocument = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
-    // Ambil dokumen dari DB
-    const document = await prisma.document.findUnique({ where: { id } });
+    const document = await prisma.document.findFirst({
+      where: { id, isDeleted: false },
+    });
     if (!document) {
       return res.status(404).json({ message: "Dokumen tidak ditemukan" });
     }
 
-    // Hapus dari Cloudinary jika ada cloudinaryId
-    if (document.cloudinaryId) {
-      await cloudinary.uploader.destroy(document.cloudinaryId, {
-        resource_type: "raw", // karena dokumen .pdf
-      });
-    }
-
-    // Hapus dari database
-    await prisma.document.delete({ where: { id } });
+    const softDeleted = await prisma.document.update({
+      where: { id },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+      },
+    });
 
     res.json({
-      message: "Dokumen berhasil dihapus (termasuk dari Cloudinary)",
+      message: "Dokumen berhasil dipindahkan ke Recycle Bin",
+      document: softDeleted,
     });
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Gagal hapus dokumen", error: error.message });
+      .json({ message: "Gagal soft delete", error: error.message });
+  }
+};
+
+// GET /documents/:id/download
+exports.downloadDocument = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const document = await prisma.document.findFirst({
+      where: { id, isDeleted: false },
+    });
+
+    if (!document || !document.filePath) {
+      return res
+        .status(404)
+        .json({ message: "Dokumen tidak ditemukan atau belum memiliki file" });
+    }
+
+    if (!document.filePath.includes("/upload/")) {
+      return res
+        .status(400)
+        .json({ message: "Format filePath tidak valid untuk download" });
+    }
+
+    const downloadUrl = document.filePath.replace(
+      "/upload/",
+      "/upload/fl_attachment/"
+    );
+    res.redirect(downloadUrl);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Gagal mendownload dokumen", error: error.message });
+  }
+};
+
+// GET /documents/deleted (Recycle Bin)
+exports.getDeletedDocuments = async (req, res) => {
+  try {
+    const deletedDocs = await prisma.document.findMany({
+      where: { isDeleted: true },
+      orderBy: { deletedAt: "desc" },
+      include: {
+        uploadedBy: { select: { id: true, name: true } },
+        validator: { select: { id: true, name: true } },
+        chapter: { select: { id: true, title: true } },
+        subSubChapter: { select: { id: true, title: true } },
+      },
+    });
+
+    res.json(deletedDocs);
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        message: "Gagal mengambil dokumen terhapus",
+        error: error.message,
+      });
+  }
+};
+
+// PATCH /documents/:id/restore
+exports.restoreDocument = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const existing = await prisma.document.findFirst({
+      where: { id, isDeleted: true },
+    });
+
+    if (!existing) {
+      return res
+        .status(404)
+        .json({ message: "Dokumen tidak ditemukan di Recycle Bin" });
+    }
+
+    const restored = await prisma.document.update({
+      where: { id },
+      data: {
+        isDeleted: false,
+        deletedAt: null,
+      },
+    });
+
+    res.json({ message: "Dokumen berhasil direstore", document: restored });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Gagal restore dokumen", error: error.message });
+  }
+};
+
+// DELETE /documents/:id/permanent
+exports.permanentlyDeleteDocument = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const existing = await prisma.document.findFirst({
+      where: { id, isDeleted: true },
+    });
+
+    if (!existing) {
+      return res
+        .status(404)
+        .json({ message: "Dokumen tidak ditemukan di Recycle Bin" });
+    }
+
+    // Hapus dari Cloudinary (jika ada)
+    if (existing.cloudinaryId) {
+      await cloudinary.uploader.destroy(existing.cloudinaryId, {
+        resource_type: "raw",
+      });
+    }
+
+    // Hapus permanen dari database
+    await prisma.document.delete({ where: { id } });
+
+    res.json({ message: "Dokumen berhasil dihapus permanen" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Gagal hapus permanen", error: error.message });
   }
 };

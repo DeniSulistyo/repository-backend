@@ -6,7 +6,7 @@ const {
   authorizeRoles,
 } = require("../middlewares/authMiddleware");
 
-// 📌 Upload dokumen (khusus ADMINISTRATOR dan OPERATOR)
+// Upload dokumen (khusus ADMINISTRATOR dan OPERATOR)
 router.post(
   "/",
   authenticateToken,
@@ -15,7 +15,7 @@ router.post(
   documentController.createDocument
 );
 
-// 📌 Ambil semua dokumen (jika diperlukan route umum)
+// Ambil semua dokumen (untuk semua role)
 router.get(
   "/",
   authenticateToken,
@@ -23,7 +23,7 @@ router.get(
   documentController.getDocuments
 );
 
-// 📌 Ambil dokumen berdasarkan SubChapter
+// Ambil dokumen berdasarkan SubChapter
 router.get(
   "/subchapter/:id",
   authenticateToken,
@@ -31,7 +31,39 @@ router.get(
   documentController.getDocumentsBySubChapter
 );
 
-// 📌 Validasi dokumen (khusus VALIDATOR)
+// Ambil dokumen yang sudah dihapus (Recycle Bin)
+router.get(
+  "/deleted",
+  authenticateToken,
+  authorizeRoles("ADMINISTRATOR", "OPERATOR"),
+  documentController.getDeletedDocuments
+);
+
+// Restore dokumen dari Recycle Bin
+router.patch(
+  "/:id/restore",
+  authenticateToken,
+  authorizeRoles("ADMINISTRATOR", "OPERATOR"),
+  documentController.restoreDocument
+);
+
+// Hapus permanen dokumen dari Recycle Bin
+router.delete(
+  "/:id/permanent",
+  authenticateToken,
+  authorizeRoles("ADMINISTRATOR"),
+  documentController.permanentlyDeleteDocument
+);
+
+// 📌 Download dokumen (ADMINISTRATOR, OPERATOR, VALIDATOR)
+router.get(
+  "/:id/download",
+  authenticateToken,
+  authorizeRoles("ADMINISTRATOR", "OPERATOR", "VALIDATOR"),
+  documentController.downloadDocument
+);
+
+// Validasi dokumen (khusus VALIDATOR dan ADMINISTRATOR)
 router.patch(
   "/:id/status",
   authenticateToken,
@@ -39,7 +71,7 @@ router.patch(
   documentController.validateDocument
 );
 
-// 📌 Detail dokumen (preview)
+// Detail dokumen (preview)
 router.get(
   "/:id",
   authenticateToken,
@@ -47,7 +79,7 @@ router.get(
   documentController.getDocumentById
 );
 
-// 📌 Edit metadata dokumen (ADMINISTRATOR dan OPERATOR)
+// Edit metadata dokumen (ADMINISTRATOR dan OPERATOR)
 router.put(
   "/:id",
   authenticateToken,
@@ -55,7 +87,7 @@ router.put(
   documentController.updateDocument
 );
 
-// 📌 Hapus dokumen (ADMINISTRATOR dan OPERATOR)
+// Hapus dokumen (soft delete) (ADMINISTRATOR dan OPERATOR)
 router.delete(
   "/:id",
   authenticateToken,

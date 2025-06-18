@@ -65,43 +65,47 @@ model SubChapter {
 
   chapter        Chapter         @relation(fields: [chapterId], references: [id])
   subSubChapters SubSubChapter[]
+  documents      Document[]
 }
 
 model SubSubChapter {
   id           Int      @id @default(autoincrement())
   subChapterId Int
+  chapterId    Int?
   title        String
   description  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   subChapter SubChapter @relation(fields: [subChapterId], references: [id])
-  Document   Document[]
-  Chapter    Chapter?   @relation(fields: [chapterId], references: [id])
-  chapterId  Int?
+  chapter    Chapter?   @relation(fields: [chapterId], references: [id])
+  documents  Document[]
 }
 
 model Document {
   id              Int            @id @default(autoincrement())
   chapterId       Int
+  subChapterId    Int?           
   subSubChapterId Int?
   title           String
   description     String?
   filePath        String
   cloudinaryId    String?
   uploadedById    Int
-  validatedBy     Int? // ✅ Tambahan
+  validatedBy     Int?
   status          DocumentStatus @default(PENDING)
   deletedAt       DateTime?      @map("deleted_at")
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+  isDeleted       Boolean        @default(false)
 
-  chapter       Chapter        @relation(fields: [chapterId], references: [id])
-  uploadedBy    User           @relation("UploadedDocuments", fields: [uploadedById], references: [id])
-  validator     User?          @relation("ValidatedDocuments", fields: [validatedBy], references: [id]) // ✅ Tambahan
-  comments      Comment[]
-  sharedLinks   SharedLink[]
-  SubSubChapter SubSubChapter? @relation(fields: [subSubChapterId], references: [id])
+  chapter         Chapter        @relation(fields: [chapterId], references: [id])
+  subChapter      SubChapter?    @relation(fields: [subChapterId], references: [id]) // ✅ ubah juga
+  subSubChapter   SubSubChapter? @relation(fields: [subSubChapterId], references: [id])
+  uploadedBy      User           @relation("UploadedDocuments", fields: [uploadedById], references: [id])
+  validator       User?          @relation("ValidatedDocuments", fields: [validatedBy], references: [id])
+  comments        Comment[]
+  sharedLinks     SharedLink[]
 }
 
 enum DocumentStatus {
