@@ -57,7 +57,7 @@ exports.getSubChaptersByChapter = async (req, res) => {
 
 // ✅ Create chapter
 exports.createChapter = async (req, res) => {
-  const { title, description, programStudiId, order } = req.body;
+  const { title, description, programStudiId } = req.body;
   try {
     const chapter = await prisma.chapter.create({
       data: {
@@ -66,7 +66,34 @@ exports.createChapter = async (req, res) => {
         programStudiId,
       },
     });
-    res.status(201).json({ message: "Bab berhasil dibuat", data: chapter });
+
+    const log = await prisma.activityLog.create({
+      data: {
+        userId: req.user.id,
+        programStudiId: programStudiId,
+        documentId: null,
+        activity: "Create Chapter",
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            role: true,
+          },
+        },
+        programStudi: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    res
+      .status(201)
+      .json({ message: "Bab berhasil dibuat", data: chapter, log });
   } catch (error) {
     res.status(500).json({
       message: "Gagal membuat bab",
