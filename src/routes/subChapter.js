@@ -6,6 +6,7 @@ const {
   authorizeRoles,
 } = require("../middlewares/authMiddleware");
 const subChapterController = require("../controllers/subChapterController");
+const subSubChapterController = require("../controllers/subSubChapterController");
 
 // POST create subchapter
 router.post(
@@ -56,4 +57,9 @@ router.delete(
   subChapterController.deleteSubChapter
 );
 
+// subsubchapters
+router.get(
+  "/:id/subsubchapters",
+  subSubChapterController.getSubSubChaptersBySubChapter
+);
 module.exports = router;
