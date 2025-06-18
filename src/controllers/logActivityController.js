@@ -18,6 +18,12 @@ exports.getAllActivityLog = async (req, res) => {
             name: true,
           },
         },
+        document: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
       },
     });
     res
