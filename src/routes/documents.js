@@ -51,7 +51,7 @@ router.patch(
 router.delete(
   "/:id/permanent",
   authenticateToken,
-  authorizeRoles("ADMINISTRATOR"),
+  authorizeRoles("ADMINISTRATOR", "OPERATOR"),
   documentController.permanentlyDeleteDocument
 );
 
