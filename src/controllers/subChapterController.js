@@ -21,6 +21,21 @@ const createSubChapter = async (req, res) => {
   }
 };
 
+const getSubChapterById = async (req, res) => {
+  const id = parseInt(req.params.id);
+  try {
+    const subChapter = await prisma.subChapter.findUnique({ where: { id } });
+    res
+      .status(200)
+      .json({ message: "Data subbab ditemukan", data: subChapter });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ message: "Gagal mengambil data subbab", error: error.message });
+  }
+};
+
 // ✅ GET by chapterId
 const getSubChaptersByChapter = async (req, res) => {
   const chapterId = parseInt(req.params.chapterId);
@@ -31,7 +46,6 @@ const getSubChaptersByChapter = async (req, res) => {
   try {
     const subChapters = await prisma.subChapter.findMany({
       where: { chapterId },
- 
     });
 
     res
@@ -90,6 +104,7 @@ const deleteSubChapter = async (req, res) => {
 module.exports = {
   createSubChapter,
   getSubChaptersByChapter,
+  getSubChapterById,
   updateSubChapter,
   deleteSubChapter,
 };

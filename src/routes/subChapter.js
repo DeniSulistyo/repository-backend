@@ -33,6 +33,13 @@ router.get(
   }
 );
 
+router.get(
+  "/:id",
+  authenticateToken,
+  authorizeRoles("ADMINISTRATOR", "OPERATOR", "VALIDATOR"),
+  subChapterController.getSubChapterById
+);
+
 // GET subchapter berdasarkan chapterId
 router.get(
   "/chapter/:chapterId",
