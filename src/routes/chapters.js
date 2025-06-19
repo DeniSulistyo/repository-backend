@@ -19,6 +19,13 @@ router.get(
   chapterController.getSubChaptersByChapter
 );
 
+router.get(
+  "/:id",
+  authenticateToken,
+  authorizeRoles("ADMINISTRATOR", "OPERATOR", "VALIDATOR"),
+  chapterController.getChaptersById
+);
+
 // ✅ Create chapter
 router.post(
   "/",

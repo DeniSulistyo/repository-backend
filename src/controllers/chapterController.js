@@ -55,6 +55,21 @@ exports.getSubChaptersByChapter = async (req, res) => {
   }
 };
 
+exports.getChaptersById = async (req, res) => {
+  const chapterId = Number(req.params.id);
+  try {
+    const chapter = await prisma.chapter.findUnique({
+      where: { id: chapterId },
+    });
+    res.json({ message: "Berhasil mengambil data bab", data: chapter });
+  } catch (error) {
+    res.status(500).json({
+      message: "Gagal mengambil data bab",
+      error: error.message,
+    });
+  }
+}
+
 // ✅ Create chapter
 exports.createChapter = async (req, res) => {
   const { title, description, programStudiId } = req.body;
