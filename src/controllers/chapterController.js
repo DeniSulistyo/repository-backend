@@ -44,6 +44,9 @@ exports.getSubChaptersByChapter = async (req, res) => {
   try {
     const subChapters = await prisma.subChapter.findMany({
       where: { chapterId },
+      include: {
+        documents: true,
+      },
       orderBy: { id: "asc" },
     });
     res.json({ message: "Berhasil mengambil data subbab", data: subChapters });
