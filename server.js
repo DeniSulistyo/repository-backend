@@ -25,6 +25,7 @@ const commentRoutes = require("./src/routes/comment");
 const subSubChapterRoutes = require("./src/routes/subSubChapter");
 const notificationRoutes = require("./src/routes/notification");
 const logActivityRoutes = require("./src/routes/logActivity");
+const programStudiRoutes = require("./src/routes/programStudi");
 
 // routes dengan prefix API masing-masing
 app.use("/api/auth", authRoutes);
@@ -36,6 +37,7 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/subsubchapters", subSubChapterRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/logactivities", logActivityRoutes);
+app.use("/api/program-studi", programStudiRoutes); 
 
 // Route default
 app.get("/", (req, res) => {
