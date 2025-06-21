@@ -24,7 +24,7 @@ const createSubChapter = async (req, res) => {
 const getSubChapterById = async (req, res) => {
   const id = parseInt(req.params.id);
   try {
-    const subChapter = await prisma.subChapter.findUnique({ where: { id } });
+    const subChapter = await prisma.subChapter.findUnique({ where: { id }, include: { documents: true } });
     res
       .status(200)
       .json({ message: "Data subbab ditemukan", data: subChapter });
