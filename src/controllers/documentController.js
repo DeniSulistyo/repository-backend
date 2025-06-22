@@ -93,7 +93,25 @@ exports.getDocuments = async (req, res) => {
         subSubChapter: { select: { id: true, title: true } },
       },
     });
-    res.json(documents);
+
+    const totalDocument = await prisma.document.count({
+      where: { isDeleted: false },
+    });
+
+    const totalRejectedDocument = await prisma.document.count({
+      where: { isDeleted: false, status: "DITOLAK" },
+    });
+
+    const totalValidDocument = await prisma.document.count({
+      where: { isDeleted: false, status: "VALID" },
+    });
+
+    res.json({
+      documents,
+      totalDocument,
+      totalRejectedDocument,
+      totalValidDocument,
+    });
   } catch (error) {
     res
       .status(500)
@@ -123,6 +141,35 @@ exports.getDocumentsBySubChapter = async (req, res) => {
     res
       .status(500)
       .json({ message: "Gagal mengambil dokumen", error: error.message });
+  }
+};
+
+exports.getAllDocumentRejected = async (req, res) => {
+  try {
+    const document = await prisma.document.findMany({
+      where: {
+        isDeleted: false,
+        status: "DITOLAK",
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        uploadedBy: { select: { id: true, name: true, username: true } },
+        validator: { select: { id: true, name: true, username: true } },
+        chapter: { select: { id: true, title: true } },
+        subChapter: { select: { id: true, title: true } },
+        subSubChapter: { select: { id: true, title: true } },
+      },
+    });
+
+    res.json(document);
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({
+        message: "Gagal mengambil dokumen yang ditolak",
+        error: error.message,
+      });
   }
 };
 

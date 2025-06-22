@@ -31,7 +31,6 @@ router.get(
   documentController.getDocumentBySlug
 );
 
-
 // Ambil dokumen berdasarkan SubChapter
 router.get(
   "/subchapter/:id",
@@ -40,7 +39,7 @@ router.get(
   documentController.getDocumentsBySubChapter
 );
 
-// Cari dokumen berdasarkan judul 
+// Cari dokumen berdasarkan judul
 router.get(
   "/search",
   authenticateToken,
@@ -54,6 +53,14 @@ router.get(
   authenticateToken,
   authorizeRoles("ADMINISTRATOR", "OPERATOR"),
   documentController.getDeletedDocuments
+);
+
+// Ambil dokumen yang ditolak
+router.get(
+  "/rejected",
+  authenticateToken,
+  authorizeRoles("ADMINISTRATOR", "OPERATOR"),
+  documentController.getAllDocumentRejected
 );
 
 // Restore dokumen dari Recycle Bin

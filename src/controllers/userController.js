@@ -33,8 +33,11 @@ exports.getUsers = async (req, res) => {
         },
       },
     });
-    res.json(users);
+
+    const totalUsers = await prisma.user.count();
+    res.json({ users, totalUsers });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Error mengambil data user." });
   }
 };
@@ -74,12 +77,10 @@ exports.deleteUser = async (req, res) => {
 exports.getAllProgramStudi = async (req, res) => {
   try {
     const programStudi = await prisma.programStudi.findMany();
-    res
-      .status(200)
-      .json({
-        message: "Data program studi berhasil diambil.",
-        data: programStudi,
-      });
+    res.status(200).json({
+      message: "Data program studi berhasil diambil.",
+      data: programStudi,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error mengambil data program studi." });
   }
