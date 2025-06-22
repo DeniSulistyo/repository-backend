@@ -25,7 +25,8 @@ exports.getSubSubChapterById = async (req, res) => {
     const subSubChapter = await prisma.subSubChapter.findUnique({
       where: { id },
       include: {
-        subChapter: { select: { id: true, title: true } },
+        documents: true,
+        subChapter: true,
       },
     });
     if (!subSubChapter) {
