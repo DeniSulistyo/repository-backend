@@ -4,6 +4,7 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const path = require("path");
 const cloudinary = require("../config/cloudinary");
 const { v4: uuidv4 } = require("uuid");
+const slugify = require("../utils/slugify");
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -23,19 +24,27 @@ exports.upload = multer({ storage });
 // POST /documents
 exports.createDocument = async (req, res) => {
   try {
-    const { chapterId, subChapterId, subSubChapterId, title, description } = req.body;
+    const { chapterId, subChapterId, subSubChapterId, title, description } =
+      req.body;
 
     // Validasi minimal salah satu ID struktur bab terisi
     if (!chapterId && !subChapterId && !subSubChapterId) {
-      return res.status(400).json({ message: "Minimal salah satu dari chapterId, subChapterId, atau subSubChapterId harus diisi" });
+      return res.status(400).json({
+        message:
+          "Minimal salah satu dari chapterId, subChapterId, atau subSubChapterId harus diisi",
+      });
     }
 
     // Validasi urutan struktur jika subChapterId atau subSubChapterId digunakan
     if (subSubChapterId && !subChapterId) {
-      return res.status(400).json({ message: "subSubChapterId membutuhkan subChapterId" });
+      return res
+        .status(400)
+        .json({ message: "subSubChapterId membutuhkan subChapterId" });
     }
     if (subChapterId && !chapterId) {
-      return res.status(400).json({ message: "subChapterId membutuhkan chapterId" });
+      return res
+        .status(400)
+        .json({ message: "subChapterId membutuhkan chapterId" });
     }
 
     // Validasi file upload
@@ -44,6 +53,7 @@ exports.createDocument = async (req, res) => {
     }
 
     const fileUrl = req.file.path;
+    const slug = slugify(title);
     const cloudinaryId = req.file.filename;
     const uploadedById = req.user.id;
 
@@ -52,6 +62,7 @@ exports.createDocument = async (req, res) => {
         chapterId: chapterId ? parseInt(chapterId) : null,
         subChapterId: subChapterId ? parseInt(subChapterId) : null,
         subSubChapterId: subSubChapterId ? parseInt(subSubChapterId) : null,
+        slug,
         title,
         description,
         filePath: fileUrl,
@@ -62,10 +73,11 @@ exports.createDocument = async (req, res) => {
 
     res.status(201).json({ message: "Dokumen berhasil diupload", document });
   } catch (error) {
-    res.status(500).json({ message: "Gagal upload dokumen", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal upload dokumen", error: error.message });
   }
 };
-
 
 // GET /documents
 exports.getDocuments = async (req, res) => {
@@ -310,12 +322,10 @@ exports.getDeletedDocuments = async (req, res) => {
 
     res.json(deletedDocs);
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Gagal mengambil dokumen terhapus",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Gagal mengambil dokumen terhapus",
+      error: error.message,
+    });
   }
 };
 
@@ -388,14 +398,12 @@ exports.shareDocument = async (req, res) => {
   try {
     const documentId = Number(req.params.id);
 
-    // Cek role user
     if (!["ADMINISTRATOR", "OPERATOR"].includes(req.user.role)) {
       return res.status(403).json({
         message: "Hanya Administrator dan Operator yang bisa share dokumen",
       });
     }
 
-    // Cek apakah dokumen tersedia
     const document = await prisma.document.findFirst({
       where: { id: documentId, isDeleted: false },
     });
@@ -404,37 +412,36 @@ exports.shareDocument = async (req, res) => {
       return res.status(404).json({ message: "Dokumen tidak ditemukan" });
     }
 
-    // Buat token unik
     const token = uuidv4();
+    const slug = document.slug;
 
-    // Simpan ke tabel shared_link
     await prisma.sharedLink.create({
       data: {
         documentId,
         token,
-        expiresAt: null, // kamu bisa tambahkan expired jika dibutuhkan
+        expiresAt: null,
       },
     });
 
-    // ✅ URL untuk preview frontend (bukan Cloudinary langsung)
-    const shareUrl = `${process.env.FRONTEND_URL}/shared/${token}`;
+    const shareUrl = `${process.env.FRONTEND_URL}/shared/${slug}`;
 
     res.status(201).json({
       message: "Link share berhasil dibuat",
       shareUrl,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Gagal membuat link share", error: error.message });
+    res.status(500).json({
+      message: "Gagal membuat link share",
+      error: error.message,
+    });
   }
 };
-
 
 // GET /shared/:token
 exports.accessSharedDocument = async (req, res) => {
   try {
-    const token = req.params.token;
+    const tokenWithSlug = req.params.token; // token-slug
+    const token = tokenWithSlug.split("-")[0]; // Ambil hanya bagian token
 
     const shared = await prisma.sharedLink.findFirst({
       where: { token },
@@ -452,7 +459,9 @@ exports.accessSharedDocument = async (req, res) => {
     });
 
     if (!shared || !shared.document) {
-      return res.status(404).json({ message: "Dokumen tidak ditemukan atau link tidak valid" });
+      return res
+        .status(404)
+        .json({ message: "Dokumen tidak ditemukan atau link tidak valid" });
     }
 
     res.json({
@@ -460,7 +469,8 @@ exports.accessSharedDocument = async (req, res) => {
       document: shared.document,
     });
   } catch (error) {
-    res.status(500).json({ message: "Gagal akses dokumen dari link", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal akses dokumen dari link", error: error.message });
   }
 };
-
