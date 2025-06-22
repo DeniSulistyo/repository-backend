@@ -5,15 +5,22 @@ const createComment = async (req, res) => {
   const userId = req.user.id;
 
   if (!content || !documentId) {
-    return res.status(400).json({ message: "Content and documentId are required." });
+    return res
+      .status(400)
+      .json({ message: "Content and documentId are required." });
   }
 
-  const document = await prisma.document.findUnique({ where: { id: documentId } });
+  const document = await prisma.document.findUnique({
+    where: { id: documentId },
+  });
 
-  if (!document) return res.status(404).json({ message: "Document not found." });
+  if (!document)
+    return res.status(404).json({ message: "Document not found." });
 
   if (req.user.role !== "VALIDATOR") {
-    return res.status(403).json({ message: "Only validators can create comments." });
+    return res
+      .status(403)
+      .json({ message: "Only validators can create comments." });
   }
 
   try {
@@ -25,13 +32,13 @@ const createComment = async (req, res) => {
       },
     });
 
-    await prisma.activityLog.create({
-      data: {
-        userId,
-        message: `Validator ${req.user.username} commented on document ID ${documentId}`,
-        status: "INFO",
-      },
-    });
+    // await prisma.activityLog.create({
+    //   data: {
+    //     userId,
+    //     message: `Validator ${req.user.username} commented on document ID ${documentId}`,
+    //     status: "INFO",
+    //   },
+    // });
 
     res.status(201).json({ message: "Comment created", data: comment });
   } catch (error) {
@@ -42,7 +49,8 @@ const createComment = async (req, res) => {
 
 const getCommentsByDocument = async (req, res) => {
   const documentId = parseInt(req.params.documentId);
-  if (isNaN(documentId)) return res.status(400).json({ message: "Invalid document ID" });
+  if (isNaN(documentId))
+    return res.status(400).json({ message: "Invalid document ID" });
 
   try {
     const comments = await prisma.comment.findMany({
@@ -67,16 +75,21 @@ const updateComment = async (req, res) => {
   const commentId = parseInt(req.params.id);
 
   if (req.user.role !== "VALIDATOR") {
-    return res.status(403).json({ message: "Only validators can update comments." });
+    return res
+      .status(403)
+      .json({ message: "Only validators can update comments." });
   }
 
   const existingComment = await prisma.comment.findUnique({
     where: { id: commentId },
   });
 
-  if (!existingComment) return res.status(404).json({ message: "Comment not found." });
+  if (!existingComment)
+    return res.status(404).json({ message: "Comment not found." });
   if (existingComment.userId !== req.user.id) {
-    return res.status(403).json({ message: "You can only update your own comments." });
+    return res
+      .status(403)
+      .json({ message: "You can only update your own comments." });
   }
 
   try {
@@ -96,14 +109,21 @@ const deleteComment = async (req, res) => {
   const commentId = parseInt(req.params.id);
 
   if (req.user.role !== "VALIDATOR") {
-    return res.status(403).json({ message: "Only validators can delete comments." });
+    return res
+      .status(403)
+      .json({ message: "Only validators can delete comments." });
   }
 
-  const existingComment = await prisma.comment.findUnique({ where: { id: commentId } });
+  const existingComment = await prisma.comment.findUnique({
+    where: { id: commentId },
+  });
 
-  if (!existingComment) return res.status(404).json({ message: "Comment not found." });
+  if (!existingComment)
+    return res.status(404).json({ message: "Comment not found." });
   if (existingComment.userId !== req.user.id) {
-    return res.status(403).json({ message: "You can only delete your own comments." });
+    return res
+      .status(403)
+      .json({ message: "You can only delete your own comments." });
   }
 
   try {

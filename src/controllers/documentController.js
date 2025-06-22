@@ -132,7 +132,9 @@ exports.searchDocuments = async (req, res) => {
     const { query = "" } = req.query;
 
     if (!query.trim()) {
-      return res.status(400).json({ message: "Kata kunci pencarian tidak boleh kosong" });
+      return res
+        .status(400)
+        .json({ message: "Kata kunci pencarian tidak boleh kosong" });
     }
 
     const documents = await prisma.document.findMany({
@@ -165,7 +167,6 @@ exports.searchDocuments = async (req, res) => {
     });
   }
 };
-
 
 // GET /documents/:id
 exports.getDocumentById = async (req, res) => {
@@ -222,12 +223,12 @@ exports.getDocumentBySlug = async (req, res) => {
   }
 };
 
-
+// PATCH /documents/:id/status
 // PATCH /documents/:id/status
 exports.validateDocument = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { status } = req.body;
+    const { status, rejectionNote } = req.body; // ✅ Tambahkan rejectionNote dari body
 
     if (!["VALID", "PENDING", "DITOLAK"].includes(status)) {
       return res.status(400).json({ message: "Status tidak valid" });
@@ -251,13 +252,27 @@ exports.validateDocument = async (req, res) => {
 
     const updated = await prisma.document.update({
       where: { id },
-      data: { status, validatedBy },
+      data: {
+        status,
+        validatedBy,
+        rejectionNote: status === "DITOLAK" ? rejectionNote : null, // ✅ Simpan alasan hanya jika ditolak
+      },
     });
+
+    const notifTitle =
+      status === "DITOLAK"
+        ? `Dokumen ${updated.title} ditolak`
+        : `Dokumen ${updated.title} telah divalidasi`;
+
+    const notifMsg =
+      status === "DITOLAK"
+        ? `Dokumen ${updated.title} ditolak oleh ${req.user.name}.`
+        : `Dokumen ${updated.title} telah divalidasi oleh ${req.user.name}.`;
 
     const notification = await prisma.notification.create({
       data: {
-        title: `Dokumen ${updated.title} telah divalidasi`,
-        message: `Dokumen ${updated.title} telah divalidasi oleh ${req.user.name}.`,
+        title: notifTitle,
+        message: notifMsg,
         userId: updated.uploadedById,
       },
     });
@@ -268,9 +283,10 @@ exports.validateDocument = async (req, res) => {
       notification,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Gagal update status dokumen", error: error.message });
+    res.status(500).json({
+      message: "Gagal update status dokumen",
+      error: error.message,
+    });
   }
 };
 
