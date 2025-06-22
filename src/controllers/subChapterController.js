@@ -29,7 +29,13 @@ const getSubChapterById = async (req, res) => {
       include: {
         documents: {
          where: { isDeleted: false },
-          
+        },
+        subSubChapters: {
+          include: {
+            documents: {
+              where: { isDeleted: false },
+            },
+          },
         },
       },
     });
@@ -54,6 +60,18 @@ const getSubChaptersByChapter = async (req, res) => {
   try {
     const subChapters = await prisma.subChapter.findMany({
       where: { chapterId },
+      include: {
+        documents: {
+          where: { isDeleted: false },
+        },
+        subSubChapters: {
+          include: {
+            documents: {
+              where: { isDeleted: false },
+            },
+          },
+        },
+      },
     });
 
     res
