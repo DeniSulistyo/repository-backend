@@ -77,18 +77,6 @@ exports.getChaptersById = async (req, res) => {
 exports.createChapter = async (req, res) => {
   const { title, description, programStudiId } = req.body;
   try {
-    const currentUser = await prisma.user.findUnique({
-      where: { id: req.user.id },
-      include: {
-        programStudi: true,
-      },
-    });
-
-    if (!currentUser || !currentUser.programStudiId) {
-      return res.status(400).json({
-        message: "User tidak memiliki program studi",
-      });
-    }
     const chapter = await prisma.chapter.create({
       data: {
         title,
@@ -100,7 +88,7 @@ exports.createChapter = async (req, res) => {
     const log = await prisma.activityLog.create({
       data: {
         userId: req.user.id,
-        programStudiId: currentUser.programStudiId,
+        programStudiId: programStudiId,
         documentId: null,
         activity: "Create Chapter",
       },

@@ -95,4 +95,15 @@ router.delete(
   documentController.deleteDocument
 );
 
+// Share dokumen (khusus Admin & Operator)
+router.post(
+  "/:id/share",
+  authenticateToken,
+  authorizeRoles("ADMINISTRATOR", "OPERATOR"),
+  documentController.shareDocument
+);
+
+// Akses dokumen dari link share (tanpa login)
+router.get("/shared/:token", documentController.accessSharedDocument);
+
 module.exports = router;

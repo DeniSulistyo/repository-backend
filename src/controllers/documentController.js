@@ -3,6 +3,7 @@ const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const path = require("path");
 const cloudinary = require("../config/cloudinary");
+const { v4: uuidv4 } = require("uuid");
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -19,7 +20,6 @@ const storage = new CloudinaryStorage({
 
 exports.upload = multer({ storage });
 
-// POST /documents
 // POST /documents
 exports.createDocument = async (req, res) => {
   try {
@@ -382,3 +382,85 @@ exports.permanentlyDeleteDocument = async (req, res) => {
       .json({ message: "Gagal hapus permanen", error: error.message });
   }
 };
+
+// POST /documents/:id/share
+exports.shareDocument = async (req, res) => {
+  try {
+    const documentId = Number(req.params.id);
+
+    // Cek role user
+    if (!["ADMINISTRATOR", "OPERATOR"].includes(req.user.role)) {
+      return res.status(403).json({
+        message: "Hanya Administrator dan Operator yang bisa share dokumen",
+      });
+    }
+
+    // Cek apakah dokumen tersedia
+    const document = await prisma.document.findFirst({
+      where: { id: documentId, isDeleted: false },
+    });
+
+    if (!document) {
+      return res.status(404).json({ message: "Dokumen tidak ditemukan" });
+    }
+
+    // Buat token unik
+    const token = uuidv4();
+
+    // Simpan ke tabel shared_link
+    await prisma.sharedLink.create({
+      data: {
+        documentId,
+        token,
+        expiresAt: null, // kamu bisa tambahkan expired jika dibutuhkan
+      },
+    });
+
+    // ✅ URL untuk preview frontend (bukan Cloudinary langsung)
+    const shareUrl = `${process.env.FRONTEND_URL}/shared/${token}`;
+
+    res.status(201).json({
+      message: "Link share berhasil dibuat",
+      shareUrl,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Gagal membuat link share", error: error.message });
+  }
+};
+
+
+// GET /shared/:token
+exports.accessSharedDocument = async (req, res) => {
+  try {
+    const token = req.params.token;
+
+    const shared = await prisma.sharedLink.findFirst({
+      where: { token },
+      include: {
+        document: {
+          where: { isDeleted: false },
+          include: {
+            chapter: { select: { id: true, title: true } },
+            subChapter: { select: { id: true, title: true } },
+            subSubChapter: { select: { id: true, title: true } },
+            uploadedBy: { select: { id: true, name: true } },
+          },
+        },
+      },
+    });
+
+    if (!shared || !shared.document) {
+      return res.status(404).json({ message: "Dokumen tidak ditemukan atau link tidak valid" });
+    }
+
+    res.json({
+      message: "Berhasil mengakses dokumen dari link",
+      document: shared.document,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Gagal akses dokumen dari link", error: error.message });
+  }
+};
+
