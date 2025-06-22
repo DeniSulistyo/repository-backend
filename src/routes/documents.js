@@ -23,12 +23,29 @@ router.get(
   documentController.getDocuments
 );
 
+// Ambil dokumen berdasarkan slug
+router.get(
+  "/slug/:slug",
+  authenticateToken,
+  authorizeRoles("ADMINISTRATOR", "OPERATOR", "VALIDATOR"),
+  documentController.getDocumentBySlug
+);
+
+
 // Ambil dokumen berdasarkan SubChapter
 router.get(
   "/subchapter/:id",
   authenticateToken,
   authorizeRoles("ADMINISTRATOR", "OPERATOR", "VALIDATOR"),
   documentController.getDocumentsBySubChapter
+);
+
+// Cari dokumen berdasarkan judul 
+router.get(
+  "/search",
+  authenticateToken,
+  authorizeRoles("ADMINISTRATOR", "OPERATOR", "VALIDATOR"),
+  documentController.searchDocuments
 );
 
 // Ambil dokumen yang sudah dihapus (Recycle Bin)

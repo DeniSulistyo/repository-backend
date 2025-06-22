@@ -126,6 +126,47 @@ exports.getDocumentsBySubChapter = async (req, res) => {
   }
 };
 
+// GET /documents/search?query=judul
+exports.searchDocuments = async (req, res) => {
+  try {
+    const { query = "" } = req.query;
+
+    if (!query.trim()) {
+      return res.status(400).json({ message: "Kata kunci pencarian tidak boleh kosong" });
+    }
+
+    const documents = await prisma.document.findMany({
+      where: {
+        isDeleted: false,
+        title: {
+          contains: query,
+          mode: "insensitive", // case-insensitive search
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        uploadedBy: { select: { id: true, name: true, username: true } },
+        validator: { select: { id: true, name: true, username: true } },
+        chapter: { select: { id: true, title: true } },
+        subChapter: { select: { id: true, title: true } },
+        subSubChapter: { select: { id: true, title: true } },
+      },
+    });
+
+    res.json({
+      message: "Pencarian berdasarkan judul berhasil",
+      total: documents.length,
+      data: documents,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Gagal mencari dokumen",
+      error: error.message,
+    });
+  }
+};
+
+
 // GET /documents/:id
 exports.getDocumentById = async (req, res) => {
   try {
@@ -148,6 +189,39 @@ exports.getDocumentById = async (req, res) => {
       .json({ message: "Gagal mengambil dokumen", error: error.message });
   }
 };
+
+// GET /documents/slug/:slug
+exports.getDocumentBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const document = await prisma.document.findFirst({
+      where: { slug, isDeleted: false },
+      include: {
+        uploadedBy: { select: { id: true, name: true, username: true } },
+        validator: { select: { id: true, name: true, username: true } },
+        chapter: { select: { id: true, title: true } },
+        subChapter: { select: { id: true, title: true } },
+        subSubChapter: { select: { id: true, title: true } },
+      },
+    });
+
+    if (!document) {
+      return res.status(404).json({ message: "Dokumen tidak ditemukan" });
+    }
+
+    res.json({
+      message: "Berhasil mengambil dokumen berdasarkan slug",
+      document,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Gagal mengambil dokumen berdasarkan slug",
+      error: error.message,
+    });
+  }
+};
+
 
 // PATCH /documents/:id/status
 exports.validateDocument = async (req, res) => {
