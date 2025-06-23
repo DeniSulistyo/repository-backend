@@ -22,11 +22,23 @@ exports.getChaptersByProgramStudi = async (req, res) => {
     const chapters = await prisma.chapter.findMany({
       where: whereClause,
       include: {
+       
         subChapters: {
           include: {
-            subSubChapters: true,
+            subSubChapters: {
+              include: {
+                documents: { where: { isDeleted: false } },
+              },
+            },
+            documents: { where: { isDeleted: false } },
           },
         },
+
+        // subSubChapters: {
+        //   include: {
+        //     documents: { where: { isDeleted: false } },
+        //   },
+        // },
       },
     });
     res.json({ message: "Berhasil mengambil data bab", data: chapters });
@@ -71,7 +83,7 @@ exports.getChaptersById = async (req, res) => {
       error: error.message,
     });
   }
-}
+};
 
 // ✅ Create chapter
 exports.createChapter = async (req, res) => {
