@@ -108,6 +108,7 @@ router.put(
   "/:id",
   authenticateToken,
   authorizeRoles("ADMINISTRATOR", "OPERATOR"),
+  documentController.upload.single("file"),
   documentController.updateDocument
 );
 

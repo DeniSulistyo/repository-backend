@@ -348,6 +348,8 @@ exports.updateDocument = async (req, res) => {
   try {
     const id = Number(req.params.id);
     const { title, description } = req.body;
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
 
     const existingDoc = await prisma.document.findFirst({
       where: { id, isDeleted: false },
@@ -383,6 +385,7 @@ exports.updateDocument = async (req, res) => {
       document: updated,
     });
   } catch (error) {
+    console.log(error);
     res
       .status(500)
       .json({ message: "Gagal update dokumen", error: error.message });
