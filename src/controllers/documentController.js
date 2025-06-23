@@ -222,7 +222,7 @@ exports.getDocumentById = async (req, res) => {
     const document = await prisma.document.findFirst({
       where: { id, isDeleted: false },
       include: {
-        uploadedBy: { select: { id: true, name: true, username: true } },
+        uploadedBy: { select: { id: true, name: true, username: true, programStudi: true } },
         validator: { select: { id: true, name: true, username: true } },
         chapter: { select: { id: true, title: true } },
         subSubChapter: { select: { id: true, title: true } },
