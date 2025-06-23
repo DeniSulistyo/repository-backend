@@ -34,6 +34,9 @@ const getSubChapterById = async (req, res) => {
           include: {
             documents: {
               where: { isDeleted: false },
+              include: {
+                uploadedBy: { select: { id: true, name: true, programStudi: true } },
+              }
             },
           },
         },
