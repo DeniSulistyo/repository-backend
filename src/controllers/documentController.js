@@ -357,7 +357,11 @@ exports.updateDocument = async (req, res) => {
       return res.status(404).json({ message: "Dokumen tidak ditemukan" });
     }
 
-    let updatedData = { title, description };
+    let updatedData = { description };
+    if (title && title !== existingDoc.title) {
+      updatedData.title = title;
+      updatedData.slug = slugify(title);
+    }
 
     if (req.file && req.file.path) {
       if (existingDoc.cloudinaryId) {
