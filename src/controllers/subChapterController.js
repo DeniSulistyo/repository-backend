@@ -28,15 +28,22 @@ const getSubChapterById = async (req, res) => {
       where: { id },
       include: {
         documents: {
-         where: { isDeleted: false },
+          where: { isDeleted: false },
+          include: {
+            uploadedBy: {
+              select: { id: true, name: true, programStudi: true },
+            },
+          },
         },
         subSubChapters: {
           include: {
             documents: {
               where: { isDeleted: false },
               include: {
-                uploadedBy: { select: { id: true, name: true, programStudi: true } },
-              }
+                uploadedBy: {
+                  select: { id: true, name: true, programStudi: true },
+                },
+              },
             },
           },
         },
