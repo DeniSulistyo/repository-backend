@@ -57,6 +57,13 @@ exports.createDocument = async (req, res) => {
     const cloudinaryId = req.file.filename;
     const uploadedById = req.user.id;
 
+    const existing = await prisma.document.findFirst({ where: { slug } });
+    if (existing) {
+      return res.status(400).json({
+        message: "Judul dokumen sudah digunakan, silakan ubah judul.",
+      });
+    }
+
     const document = await prisma.document.create({
       data: {
         chapterId: chapterId ? parseInt(chapterId) : null,
@@ -73,6 +80,7 @@ exports.createDocument = async (req, res) => {
 
     res.status(201).json({ message: "Dokumen berhasil diupload", document });
   } catch (error) {
+    console.log(error);
     res
       .status(500)
       .json({ message: "Gagal upload dokumen", error: error.message });
@@ -164,12 +172,10 @@ exports.getAllDocumentRejected = async (req, res) => {
     res.json(document);
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .json({
-        message: "Gagal mengambil dokumen yang ditolak",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Gagal mengambil dokumen yang ditolak",
+      error: error.message,
+    });
   }
 };
 
@@ -222,7 +228,7 @@ exports.getDocumentById = async (req, res) => {
     const document = await prisma.document.findFirst({
       where: { id, isDeleted: false },
       include: {
-        uploadedBy: { select: { id: true, name: true, username: true, programStudi: true } },
+        uploadedBy: { select: { id: true, name: true, username: true } },
         validator: { select: { id: true, name: true, username: true } },
         chapter: { select: { id: true, title: true } },
         subSubChapter: { select: { id: true, title: true } },
