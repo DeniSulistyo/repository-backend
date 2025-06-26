@@ -13,8 +13,9 @@ async function main() {
     "Mesin Otomotif (D3)",
   ];
 
+  const validatorUsername = "validator";
   const existingValidator = await prisma.user.findUnique({
-    where: { username },
+    where: { username: validatorUsername },
   });
 
   if (!existingValidator) {
@@ -23,14 +24,14 @@ async function main() {
     await prisma.user.create({
       data: {
         name: `Validator `,
-        username: username,
+        username: validatorUsername,
         password: hashedPassword,
         role: "VALIDATOR",
         programStudiId: null,
       },
     });
 
-    console.log(`✅ Validator dibuat: ${username} `);
+    console.log(`✅ Validator dibuat: ${validatorUsername} `);
   } else {
     console.log(`⚠️ Validator dengan username "${username}" sudah ada.`);
   }

@@ -103,7 +103,7 @@ model Document {
   isDeleted       Boolean        @default(false)
 
   chapter       Chapter        @relation(fields: [chapterId], references: [id])
-  subChapter    SubChapter?    @relation(fields: [subChapterId], references: [id]) // ✅ ubah juga
+  subChapter    SubChapter?    @relation(fields: [subChapterId], references: [id]) 
   subSubChapter SubSubChapter? @relation(fields: [subSubChapterId], references: [id])
   uploadedBy    User           @relation("UploadedDocuments", fields: [uploadedById], references: [id])
   validator     User?          @relation("ValidatedDocuments", fields: [validatedBy], references: [id])
