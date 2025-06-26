@@ -6,7 +6,7 @@ require("dotenv").config(); // Load environment variables dari .env
 const app = express();
 
 const corsOptions = {
-  origin: ["http://localhost:5173", "https://eviden-frontend.vercel.app"],
+  origin: ["http://localhost:5173", "https://eviden-akreditasi.vercel.app"],
   credentials: true,
 };
 
