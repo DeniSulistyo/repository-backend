@@ -14,6 +14,6 @@ router.get(
   programStudiController.getAllProgramStudi
 );
 
-router.get("/:id", authenticateToken, authorizeRoles("ADMINISTRATOR", "VALIDATOR"), programStudiController.getProgramStudiById);
+router.get("/:id", authenticateToken, authorizeRoles("ADMINISTRATOR", "VALIDATOR", "OPERATOR"), programStudiController.getProgramStudiById);
 
 module.exports = router;
