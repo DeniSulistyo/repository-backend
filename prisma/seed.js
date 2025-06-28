@@ -13,6 +13,16 @@ async function main() {
     "Mesin Otomotif (D3)",
   ];
 
+  const existingProdi = await prisma.programStudi.findMany();
+  if (existingProdi.length === 0) {
+    await prisma.programStudi.createMany({
+      data: programStudis.map((name) => ({ name })),
+    });
+    console.log("✅ Program Studi berhasil ditambahkan.");
+  } else {
+    console.log("⚠️ Program Studi sudah ada, tidak ditambahkan ulang.");
+  }
+
   const validatorUsername = "validator";
   const existingValidator = await prisma.user.findUnique({
     where: { username: validatorUsername },
@@ -33,8 +43,55 @@ async function main() {
 
     console.log(`✅ Validator dibuat: ${validatorUsername} `);
   } else {
-    console.log(`⚠️ Validator dengan username "${username}" sudah ada.`);
+    console.log(`⚠️ Validator dengan username "${validatorUsername}" sudah ada.`);
   }
+
+  const guestUsername = "guest";
+  const existingQuest = await prisma.user.findUnique({
+    where: { username: guestUsername },
+  });
+
+  if (!existingQuest) {
+    const hashedPassword = await bcrypt.hash("guest123", 10);
+
+    await prisma.user.create({
+      data: {
+        name: `Guest `,
+        username: guestUsername,
+        password: hashedPassword,
+        role: "OPERATOR",
+        programStudiId: null,
+      },
+    });
+
+    console.log(`✅ Guest dibuat: ${guestUsername} `);
+  } else {
+    console.log(`⚠️ Guest dengan username "${guestUsername}" sudah ada.`);
+  }
+
+  const operatorUsername = "operator";
+  const existingOperator = await prisma.user.findUnique({
+    where: { username: operatorUsername },
+  });
+
+   if (!existingOperator) {
+    const hashedPassword = await bcrypt.hash("operator123", 10);
+
+    await prisma.user.create({
+      data: {
+        name: `Operator `,
+        username: operatorUsername,
+        password: hashedPassword,
+        role: "OPERATOR",
+        programStudiId: null,
+      },
+    });
+
+    console.log(`✅ Operator dibuat: ${operatorUsername} `);
+  } else {
+    console.log(`⚠️ Operator dengan username "${operatorUsername}" sudah ada.`);
+  }
+
 
   // Admin utama
   const adminUsername = "admin1";

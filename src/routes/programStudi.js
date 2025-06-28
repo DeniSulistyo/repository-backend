@@ -10,7 +10,7 @@ const {
 router.get(
   "/",
   authenticateToken,
-  authorizeRoles("ADMINISTRATOR", "VALIDATOR"),
+  authorizeRoles("ADMINISTRATOR", "VALIDATOR", "OPERATOR"),
   programStudiController.getAllProgramStudi
 );
 
