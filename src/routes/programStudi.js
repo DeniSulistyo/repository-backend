@@ -10,10 +10,10 @@ const {
 router.get(
   "/",
   authenticateToken,
-  authorizeRoles("ADMINISTRATOR", "VALIDATOR"),
+  authorizeRoles("ADMINISTRATOR", "VALIDATOR", "OPERATOR"),
   programStudiController.getAllProgramStudi
 );
 
-router.get("/:id", authenticateToken, authorizeRoles("ADMINISTRATOR", "VALIDATOR"), programStudiController.getProgramStudiById);
+router.get("/:id", authenticateToken, authorizeRoles("ADMINISTRATOR", "VALIDATOR", "OPERATOR"), programStudiController.getProgramStudiById);
 
 module.exports = router;
