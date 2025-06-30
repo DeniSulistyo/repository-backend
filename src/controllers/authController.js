@@ -20,7 +20,26 @@ exports.login = async (req, res) => {
     { expiresIn: "1d" }
   );
 
+  const log = await prisma.activityLog.create({
+    data: {
+      userId: user.id,
+      programStudiId:
+        user.role === "ADMINISTRATOR" ? null : user.programStudiId,
+      documentId: null,
+      activity: "Login Sistem",
+    },
+    include: {
+      user: {
+        select: { id: true, name: true, role: true },
+      },
+      programStudi: {
+        select: { id: true, name: true },
+      },
+    },
+  });
+
   res.json({
+    log,
     token,
     user: {
       id: user.id,
