@@ -9,6 +9,7 @@ exports.getAllActivityLog = async (req, res) => {
     const activityLogs = await prisma.activityLog.findMany({
       skip,
       take: limit,
+      orderBy: { createdAt: "desc" },
       include: {
         user: {
           select: {
@@ -34,10 +35,13 @@ exports.getAllActivityLog = async (req, res) => {
     });
 
     const total = await prisma.activityLog.count();
+
+    const lastPage = Math.ceil(total / limit);
+
     res.status(200).json({
       message: "Activity logs found",
       data: activityLogs,
-      meta: { page, total, lastPage: Math.ceil(total / page) },
+      meta: { page, total, lastPage },
     });
   } catch (error) {
     console.log(error);
