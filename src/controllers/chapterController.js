@@ -22,7 +22,6 @@ exports.getChaptersByProgramStudi = async (req, res) => {
     const chapters = await prisma.chapter.findMany({
       where: whereClause,
       include: {
-       
         subChapters: {
           include: {
             subSubChapters: {
@@ -202,6 +201,7 @@ exports.deleteChapter = async (req, res) => {
       where: { chapterId },
       select: { id: true },
     });
+
     const subChapterIds = subChapters.map((s) => s.id);
 
     if (subChapterIds.length > 0) {
@@ -235,7 +235,31 @@ exports.deleteChapter = async (req, res) => {
       where: { id: chapterId },
     });
 
-    res.json({ message: "Chapter berhasil dihapus" });
+    const currentUser = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: { programStudi: true },
+    });
+
+    const user = currentUser || { id: null, name: null, role: null };
+
+    const log = await prisma.activityLog.create({
+      data: {
+        userId: req.user.id,
+        programStudiId: user.programStudiId,
+        documentId: null,
+        activity: "Delete Chapter",
+      },
+      include: {
+        user: {
+          select: { id: true, name: true, role: true },
+        },
+        programStudi: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    res.json({ message: "Chapter berhasil dihapus", log });
   } catch (error) {
     console.error("Error hapus chapter:", error);
     res.status(500).json({

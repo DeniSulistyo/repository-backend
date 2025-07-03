@@ -3,6 +3,7 @@ const router = express.Router();
 
 // Panggil controller
 const subSubChapterController = require('../controllers/subSubChapterController');
+const { authorizeRoles, authenticateToken } = require('../middlewares/authMiddleware');
 
 // Routing CRUD untuk SubSubChapter
 router.get(
@@ -16,7 +17,8 @@ router.get(
 );
 
 router.post(
-    '/', 
+    '/',   authenticateToken,
+   authorizeRoles("ADMINISTRATOR", "OPERATOR"),
     subSubChapterController.
     createSubSubChapter
 );
@@ -28,6 +30,8 @@ router.put(
 
 router.delete(
     '/:id', 
+    authenticateToken,
+    authorizeRoles("ADMINISTRATOR", "OPERATOR"),
     subSubChapterController.deleteSubSubChapter
 );
 

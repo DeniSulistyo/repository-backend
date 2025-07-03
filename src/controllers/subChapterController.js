@@ -11,9 +11,28 @@ const createSubChapter = async (req, res) => {
         description,
       },
     });
+
+    const log = await prisma.activityLog.create({
+      data: {
+        userId: req.user.id,
+        programStudiId: req.user.programStudiId,
+
+        documentId: null,
+        activity: "Create SubChapter",
+      },
+      include: {
+        user: {
+          select: { id: true, name: true, role: true, programStudi: true },
+        },
+        programStudi: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
     res
       .status(201)
-      .json({ message: "Subbab berhasil dibuat", data: subChapter });
+      .json({ message: "Subbab berhasil dibuat", data: subChapter, log });
   } catch (error) {
     res
       .status(500)
@@ -129,7 +148,24 @@ const deleteSubChapter = async (req, res) => {
 
   try {
     await prisma.subChapter.delete({ where: { id } });
-    res.status(200).json({ message: "Subbab berhasil dihapus" });
+    const log = await prisma.activityLog.create({
+      data: {
+        userId: req.user.id,
+        programStudiId: req.user.programStudiId,
+        documentId: null,
+        activity: "Delete SubChapter",
+      },
+      include: {
+        user: {
+          select: { id: true, name: true, role: true, programStudi: true },
+        },
+        programStudi: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    res.status(200).json({ message: "Subbab berhasil dihapus", log });
   } catch (error) {
     res
       .status(500)

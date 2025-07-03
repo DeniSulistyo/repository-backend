@@ -86,11 +86,29 @@ exports.createSubSubChapter = async (req, res) => {
       },
     });
 
+    const log = await prisma.activityLog.create({
+      data: {
+        userId: req.user.id,
+        programStudiId: req.user.programStudiId,
+        documentId: null,
+        activity: "Create SubSubChapter",
+      },
+      include: {
+        user: {
+          select: { id: true, name: true, role: true },
+        },
+        programStudi: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
     res.status(201).json({
-      message: "Sub-sub-chapter berhasil dibuat",
+      message: "Sub-sub-chapter berhasil dibuat",log,
       data: newSubSubChapter,
     });
   } catch (error) {
+    console.log(error);
     res
       .status(500)
       .json({ message: "Gagal membuat sub-sub-chapter", error: error.message });
@@ -130,7 +148,25 @@ exports.deleteSubSubChapter = async (req, res) => {
     await prisma.subSubChapter.delete({
       where: { id },
     });
-    res.json({ message: "Sub-sub-chapter berhasil dihapus" });
+
+    const log = await prisma.activityLog.create({
+      data: {
+        userId: req.user.id,
+        programStudiId: req.user.programStudiId,
+        documentId: null,
+        activity: "Delete SubSubChapter",
+      },
+      include: {
+        user: {
+          select: { id: true, name: true, role: true },
+        },
+        programStudi: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    res.json({ message: "Sub-sub-chapter berhasil dihapus", log });
   } catch (error) {
     res.status(500).json({
       message: "Gagal menghapus sub-sub-chapter",
