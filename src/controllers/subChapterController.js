@@ -12,6 +12,8 @@ const createSubChapter = async (req, res) => {
       },
     });
 
+
+// create activity log  
     const log = await prisma.activityLog.create({
       data: {
         userId: req.user.id,

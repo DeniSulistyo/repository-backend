@@ -77,7 +77,7 @@ exports.createDocument = async (req, res) => {
         uploadedById,
       },
     });
-    
+
     const currentUser = await prisma.user.findUnique({
       where: { id: uploadedById },
       include: { programStudi: true },
@@ -102,10 +102,22 @@ exports.createDocument = async (req, res) => {
           select: { id: true, title: true },
         },
       },
+    });
 
-    })
+    const notification = await prisma.notification.create({
+      data: {
+        userId: uploadedById,
+        title: `Dokumen Baru: ${document.title}`,
+        message: `Dokumen "${document.title}" telah diupload oleh ${user.name}`,
+      },
+    });
 
-    res.status(201).json({ message: "Dokumen berhasil diupload", document, log });
+    res.status(201).json({
+      message: "Dokumen berhasil diupload",
+      document,
+      log,
+      notification,
+    });
   } catch (error) {
     console.log(error);
     res

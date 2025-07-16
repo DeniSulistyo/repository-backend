@@ -1,7 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
-const cookieParser = require("cookie-parser"); 
+const cookieParser = require("cookie-parser");
 require("dotenv").config(); // Load environment variables dari .env
 
 const app = express();
@@ -39,15 +39,13 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/subsubchapters", subSubChapterRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/logactivities", logActivityRoutes);
-app.use("/api/program-studi", programStudiRoutes); 
+app.use("/api/program-studi", programStudiRoutes);
 
 // Route default
-const { client } = require("./lib/redis");
 app.get("/", async (req, res) => {
   await client.set("message", "Hello Redis!");
   const msg = await client.get("message");
   res.send(msg);
 });
-
 
 module.exports = app;
